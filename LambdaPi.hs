@@ -16,7 +16,8 @@
   import Text.ParserCombinators.Parsec.Token
   import Text.ParserCombinators.Parsec.Language
 {-# LINE 171 "LP.lhs" #-}
-  import System.Console.Readline
+  import System.Console.Haskeline
+  import qualified System.Console.Haskeline.History as HlHist
   import System.IO hiding (print)
 {-# LINE 176 "LP.lhs" #-}
   putstrln x = putStrLn x
@@ -342,13 +343,21 @@
                    | PutStrLn String        --  lhs2TeX hacking, allow to print "magic" string
                    | Out String             --  more lhs2TeX hacking, allow to print to files
     deriving (Show)
-        
+  
+  readline m = fmap Just $
+    do {
+        putStr m;
+        getLine;
+      }
+  
+  addHistory s = runInputT defaultSettings (putHistory (HlHist.addHistory s HlHist.emptyHistory))
+  
   --  read-eval-print loop
   readevalprint :: Interpreter i c v t tinf inf -> State v inf -> IO ()
   readevalprint int state@(inter, out, ve, te) =
     let rec int state =
           do
-            x <- catch
+            x <- Prelude.catch
                    (if inter
                     then readline (iprompt int) 
                     else fmap Just getLine)
