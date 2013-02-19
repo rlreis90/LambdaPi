@@ -1,25 +1,14 @@
 module Interpreter where
-  import Prelude hiding (print)
-  import Control.Monad.Error
-  import Data.List
-  import Data.Char
-  import Text.PrettyPrint.HughesPJ hiding (parens)
-  import qualified Text.PrettyPrint.HughesPJ as PP
-  import Text.ParserCombinators.Parsec hiding (parse, State)
-  import qualified Text.ParserCombinators.Parsec as P
-  import Text.ParserCombinators.Parsec.Token
-  import Text.ParserCombinators.Parsec.Language
-  import System.Console.Haskeline hiding(catch)
   import qualified System.Console.Haskeline.History as HlHist
-  import System.IO hiding (print)
+  import Control.Monad.Error
+  import System.Console.Haskeline hiding(catch)
   
   import LP_Ast
-  import LP
+  import LambdaPi_Core
   import Parser
   import Parser_LP
   import Printer
-  import Printer_LP
-  
+
   readline m = fmap Just $
     do {
         putStr m;
@@ -303,7 +292,4 @@ module Interpreter where
 
   process :: String -> String
   process = unlines . map (\ x -> "< " ++ x) . lines
-  
-  main :: IO ()
-  main = repLP True
   

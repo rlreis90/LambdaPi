@@ -1,18 +1,7 @@
 
-module LP where
-  import Prelude hiding (print)
+module LambdaPi_Core where
   import Control.Monad.Error
-  import Data.List
-  import Data.Char
   import Text.PrettyPrint.HughesPJ hiding (parens)
-  import qualified Text.PrettyPrint.HughesPJ as PP
-  import Text.ParserCombinators.Parsec hiding (parse, State)
-  import qualified Text.ParserCombinators.Parsec as P
-  import Text.ParserCombinators.Parsec.Token
-  import Text.ParserCombinators.Parsec.Language
-  import System.Console.Haskeline hiding(catch)
-  import qualified System.Console.Haskeline.History as HlHist
-  import System.IO hiding (print)
       
   import LP_Ast
   import Printer

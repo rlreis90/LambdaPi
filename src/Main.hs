@@ -1,6 +1,6 @@
 module Main where
 
-import qualified Interpreter as I
-
+import Interpreter
+  
 main :: IO ()
-main = I.main
+main = repLP True

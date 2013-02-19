@@ -1,21 +1,11 @@
 module Parser_LP where
   import Prelude hiding (print)
-  import Control.Monad.Error
   import Data.List
-  import Data.Char
-  import Text.PrettyPrint.HughesPJ hiding (parens)
-  import qualified Text.PrettyPrint.HughesPJ as PP
   import Text.ParserCombinators.Parsec hiding (parse, State)
-  import qualified Text.ParserCombinators.Parsec as P
   import Text.ParserCombinators.Parsec.Token
-  import Text.ParserCombinators.Parsec.Language
-  import System.Console.Haskeline hiding(catch)
-  import qualified System.Console.Haskeline.History as HlHist
-  import System.IO hiding (print)
   
   import LP_Ast
   import Parser
-  
                                              
   parseStmt_ :: [String] -> CharParser () (Stmt ITerm_ CTerm_)
   parseStmt_ e =
