@@ -1,21 +1,10 @@
 module Printer where
   import Prelude hiding (print)
-  import Control.Monad.Error
-  import Data.List
-  import Data.Char
-  import Text.PrettyPrint.HughesPJ hiding (parens)
+  import           Text.PrettyPrint.HughesPJ hiding (parens)
   import qualified Text.PrettyPrint.HughesPJ as PP
-  import Text.ParserCombinators.Parsec hiding (parse, State)
-  import qualified Text.ParserCombinators.Parsec as P
-  import Text.ParserCombinators.Parsec.Token
-  import Text.ParserCombinators.Parsec.Language
-  import System.Console.Haskeline hiding(catch)
-  import qualified System.Console.Haskeline.History as HlHist
-  import System.IO hiding (print)
   
   import LP_Ast
   
-  {-# LINE 5 "Printer.lhs" #-}
   tPrint :: Int -> Type -> Doc
   tPrint p (TFree (Global s))  =  text s
   tPrint p (Fun ty ty')        =  parensIf (p > 0) (sep [tPrint 0 ty <> text " ->", nest 2 (tPrint 0 ty')])

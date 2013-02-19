@@ -1,21 +1,6 @@
 
-module LP_Ast where
-  import Prelude hiding (print)
-  import Control.Monad.Error
-  import Data.List
-  import Data.Char
-  import Text.PrettyPrint.HughesPJ hiding (parens)
-  import qualified Text.PrettyPrint.HughesPJ as PP
-  import Text.ParserCombinators.Parsec hiding (parse, State)
-  import qualified Text.ParserCombinators.Parsec as P
-  import Text.ParserCombinators.Parsec.Token
-  import Text.ParserCombinators.Parsec.Language
-  import System.Console.Haskeline hiding(catch)
-  import qualified System.Console.Haskeline.History as HlHist
-  import System.IO hiding (print)
+module LP_Ast where    
     
-    
--- LINE 5 "Interpreter.lhs" #-}
   data Stmt i tinf = Let String i           --  let x = t
                    | Assume [(String,tinf)] --  assume x :: t, assume x :: *
                    | Eval i
@@ -27,7 +12,7 @@ module LP_Ast where
   type Ctx inf = [(Name, inf)]
   type State v inf = (Bool, String, NameEnv v, Ctx inf)
   
-  -- LINE 670 "LP.lhs" #-}
+
   data ITerm
      =  Ann    CTerm Type
      |  Bound  Int

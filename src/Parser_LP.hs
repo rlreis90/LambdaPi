@@ -15,7 +15,6 @@ module Parser_LP where
   
   import LP_Ast
   import Parser
-  
                                              
   parseStmt_ :: [String] -> CharParser () (Stmt ITerm_ CTerm_)
   parseStmt_ e =
