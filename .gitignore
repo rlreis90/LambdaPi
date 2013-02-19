@@ -1,3 +1,7 @@
+#EclipseFP generated files
+.dist-buildwrapper/
+
+
 # Build Folders (you can keep bin if you'd like, to store dlls and pdbs)
 [Bb]in/
 [Oo]bj/
@@ -155,6 +159,3 @@ ModelManifest.xml
 Icon?
 ehthumbs.db
 Thumbs.db
-
-# Annoying, IDK y it shows up
-*.bak
