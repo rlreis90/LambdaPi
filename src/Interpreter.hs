@@ -1,51 +1,60 @@
+
 module Interpreter where
-  import qualified System.Console.Haskeline.History as HlHist
   import Control.Monad.Error
-  import System.Console.Haskeline hiding(catch)
+  import Data.List
+  import Data.Char
+  import Text.PrettyPrint.HughesPJ hiding (parens)
+  import Text.ParserCombinators.Parsec hiding (parse, State)
+  import System.Console.Haskeline hiding (catch)
+  import qualified System.Console.Haskeline.History as HlHist
   
-  import LP_Ast
   import LambdaPi_Core
+  import LP_Ast
   import Parser
   import Parser_LP
   import Printer
+  import Printer_LP
 
+  readline :: String -> IO (Maybe String)
+  
   readline m = fmap Just $
     do {
         putStr m;
         getLine;
       }
+      
+  addHistory :: MonadException m => String -> m ()
   
   addHistory s = runInputT defaultSettings (putHistory (HlHist.addHistory s HlHist.emptyHistory))
   
   
-  
   --  read-eval-print loop
   readevalprint :: Interpreter i c v t tinf inf -> State v inf -> IO ()
-  readevalprint int state@(inter, out, ve, te) =
-    let rec int state =
+  readevalprint interpreter top_state@(inter, _, _, _) =
+    let rec interp state =
           do
-            x <- catch
+            xs <- catch
                    (if inter
-                    then readline (iprompt int) 
+                    then readline (iprompt interp) 
                     else fmap Just getLine)
                    (\_ -> return Nothing)
-            case x of
+            case xs of
               Nothing   ->  return ()
-              Just ""   ->  rec int state
+              Just ""   ->  rec interp state
               Just x    ->
                 do
                   when inter (addHistory x)
                   c  <- interpretCommand x
-                  state' <- handleCommand int state c
-                  maybe (return ()) (rec int) state'
+                  state' <- handleCommand interp state c
+                  maybe (return ()) (rec interp) state'
     in
       do
         --  welcome
-        when inter $ putStrLn ("Interpreter for " ++ iname int ++ ".\n" ++
+        when inter $ putStrLn ("Interpreter for " ++ iname interpreter ++ ".\n" ++
                                "Type :? for help.")
         --  enter loop
-        rec int state
-{-# LINE 40 "Interpreter.lhs" #-}
+        rec interpreter top_state
+-- LINE 40 "Interpreter.lhs" #-}
   data Command = TypeOf String
                | Compile CompileForm
                | Browse
@@ -81,7 +90,7 @@ module Interpreter where
   
   interpretCommand :: String -> IO Command
   interpretCommand x
-    =  if isPrefixOf ":" x then
+    =  if ":" `isPrefixOf` x then
          do  let  (cmd,t')  =  break isSpace x
                   t         =  dropWhile isSpace t'
              --  find matching commands
@@ -90,37 +99,37 @@ module Interpreter where
                []  ->  do  putStrLn ("Unknown command `" ++ cmd ++ "'. Type :? for help.")
                            return Noop
                [Cmd _ _ f _]
-                   ->  do  return (f t)
+                   ->  return (f t)
                x   ->  do  putStrLn ("Ambiguous command, could be " ++ concat (intersperse ", " [ head cs | Cmd cs _ _ _ <- matching ]) ++ ".")
                            return Noop
        else
          return (Compile (CompileInteractive x))
   
   handleCommand :: Interpreter i c v t tinf inf -> State v inf -> Command -> IO (Maybe (State v inf))
-  handleCommand int state@(inter, out, ve, te) cmd
+  handleCommand interpreter state@(inter, _, ve, te) cmd
     =  case cmd of
          Quit   ->  when (not inter) (putStrLn "!@#$^&*") >> return Nothing
          Noop   ->  return (Just state)
          Help   ->  putStr (helpTxt commands) >> return (Just state)
          TypeOf x ->
-                    do  x <- parseIO "<interactive>" (iiparse int) x
-                        t <- maybe (return Nothing) (iinfer int ve te) x
-                        maybe (return ()) (\u -> putStrLn (render (itprint int u))) t
+                    do  x <- parseIO "<interactive>" (iiparse interpreter) x
+                        t <- maybe (return Nothing) (iinfer interpreter ve te) x
+                        maybe (return ()) (\u -> putStrLn (render (itprint interpreter u))) t
                         return (Just state)
          Browse ->  do  putStr (unlines [ s | Global s <- reverse (nub (map fst te)) ])
                         return (Just state)
          Compile c ->
                     do  state <- case c of
-                                   CompileInteractive s -> compilePhrase int state s
-                                   CompileFile f        -> compileFile int state f
+                                   CompileInteractive s -> compilePhrase interpreter state s
+                                   CompileFile f        -> compileFile interpreter state f
                         return (Just state)
  
   compileFile :: Interpreter i c v t tinf inf -> State v inf -> String -> IO (State v inf)
-  compileFile int state@(inter, out, ve, te) f =
+  compileFile interpreter state@(inter, out, ve, te) f =
     do
       x <- readFile f
-      stmts <- parseIO f (many (isparse int)) x
-      maybe (return state) (foldM (handleStmt int) state) stmts
+      stmts <- parseIO f (many (isparse interpreter)) x
+      maybe (return state) (foldM (handleStmt interpreter) state) stmts
   
   compilePhrase :: Interpreter i c v t tinf inf -> State v inf -> String -> IO (State v inf)
   compilePhrase int state@(inter, out, ve, te) x =
