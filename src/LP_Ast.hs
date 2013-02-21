@@ -12,7 +12,6 @@ module LP_Ast where
   type Ctx inf = [(Name, inf)]
   type State v inf = (Bool, String, NameEnv v, Ctx inf)
   
-
   data ITerm
      =  Ann    CTerm Type
      |  Bound  Int
