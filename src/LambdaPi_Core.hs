@@ -3,20 +3,22 @@ module LambdaPi_Core where
   import Control.Monad.Error
       
   import LP_Ast
-  import Printer
   import Printer_LP
  
   iEval :: ITerm -> (NameEnv Value,Env) -> Value
+  
   iEval (Ann  e _)    d  =  cEval e d
-  iEval (Free  x)     d  =  case lookup x (fst d) of Nothing ->  (vfree x); Just v -> v
-  iEval (Bound  ii)   d  =  (snd d) !! ii
-  iEval (e1 :@: e2)   d  =  vapp (iEval e1 d) (cEval e2 d)
+  iEval (Free  x)     d  =  case lookup x (fst d) of Nothing -> vfree x; Just v -> v
+  iEval (Bound  ii)   d  =  snd d !! ii
+  iEval (e1 :@: e2)   d  =  iEval e1 d `vapp` cEval e2 d
  
   vapp :: Value -> Value -> Value
+  
   vapp (VLam f)      v  =  f v
   vapp (VNeutral n)  v  =  VNeutral (NApp n v)
  
   cEval :: CTerm -> (NameEnv Value,Env) -> Value
+  
   cEval (Inf  ii)   d  =  iEval ii d
   cEval (Lam  e)    d  =  VLam (\ x -> cEval e (((\(e, d) -> (e,  (x : d))) d)))
   
@@ -83,36 +85,14 @@ module LambdaPi_Core where
   
   boundfree :: Int -> Name -> ITerm
   boundfree ii (Quote k)     =  Bound (ii - k - 1)
-  boundfree ii x             =  Free x
+  boundfree _  x             =  Free x
   
   id'      =  Lam (Inf (Bound 0))
   const'   =  Lam (Lam (Inf (Bound 1)))
  
   tfree a  =  TFree (Global a)
   free x   =  Inf (Free (Global x))
- 
-  term1    =  Ann id' (Fun (tfree "a") (tfree "a")) :@: free "y" 
-  term2    =  Ann const' (Fun  (Fun (tfree "b") (tfree "b"))
-                               (Fun  (tfree "a")
-                                     (Fun (tfree "b") (tfree "b"))))
-              :@: id' :@: free "y" 
- 
-  env1     =  [  (Global "y", HasType (tfree "a")),
-                 (Global "a", HasKind Star)]
-  env2     =  [(Global "b", HasKind Star)] ++ env1
-  
-  test_eval1=  quote0 (iEval term1 ([],[]))
-   {-  \eval{test_eval1}  -}
- 
-  test_eval2=  quote0 (iEval term2 ([],[]))
-   {-  \eval{test_eval2}  -}
- 
-  test_type1=  iType0 env1 term1
-   {-  \eval{test_type1}  -}
- 
-  test_type2=  iType0 env2 term2
-   {-  \eval{test_type2}  -}
-   
+    
  
   vapp_ :: Value_ -> Value_ -> Value_
   vapp_ (VLam_ f)      v  =  f v
@@ -123,7 +103,7 @@ module LambdaPi_Core where
  
   cEval_ :: CTerm_ -> (NameEnv Value_,Env_) -> Value_
   cEval_ (Inf_  ii)    d  =  iEval_ ii d
-  cEval_ (Lam_  c)     d  =  VLam_ (\ x -> cEval_ c (((\(e, d) -> (e,  (x : d))) d)))
+  cEval_ (Lam_  c)     d  =  VLam_ (\ x -> cEval_ c ((\ (e, d) -> (e, x : d)) d))
 -- LINE 2 "cEval_Nat.lhs" #-}
   cEval_ Zero_      d  = VZero_
   cEval_ (Succ_ k)  d  = VSucc_ (cEval_ k d)
@@ -259,12 +239,10 @@ module LambdaPi_Core where
     =     Lam_ (quote_ (ii + 1) (t (vfree_ (Quote ii))))
 -- LINE 1718 "LP.lhs" #-}
   
-  quote_ ii VStar_ = Inf_ Star_ 
-  quote_ ii (VPi_ v f)                                       
-      =  Inf_ (Pi_ (quote_ ii v) (quote_ (ii + 1) (f (vfree_ (Quote ii)))))  
+  quote_ _  VStar_        = Inf_ Star_ 
+  quote_ ii (VPi_ v f)    = Inf_ (Pi_ (quote_ ii v) (quote_ (ii + 1) (f (vfree_ (Quote ii)))))  
 -- LINE 1725 "LP.lhs" #-}
-  quote_ ii (VNeutral_ n)
-    =     Inf_ (neutralQuote_ ii n)
+  quote_ ii (VNeutral_ n) = Inf_ (neutralQuote_ ii n)
 -- LINE 2 "quote_Nat.lhs" #-}
   quote_ ii VNat_       =  Inf_ Nat_
   quote_ ii VZero_      =  Zero_
@@ -453,3 +431,37 @@ module LambdaPi_Core where
   plus :: Nat -> Nat -> Nat 
   plus Zero n      = n 
   plus (Succ k) n  = Succ (plus k n)
+  
+  
+  
+  
+  
+  
+  --test data
+  
+  term1 :: ITerm
+  term1    =  Ann id' (Fun (tfree "a") (tfree "a")) :@: free "y"
+
+  term2 :: ITerm
+  term2    =  Ann const' (Fun  (Fun (tfree "b") (tfree "b"))
+                               (Fun  (tfree "a")
+                                     (Fun (tfree "b") (tfree "b"))))
+              :@: id' :@: free "y" 
+ 
+  env1 :: [(Name, Info)]
+  env1     =  [(Global "y", HasType (tfree "a")),
+               (Global "a", HasKind Star)]
+               
+  env2     =  [(Global "b", HasKind Star)] ++ env1
+  
+  test_eval1=  quote0 (iEval term1 ([],[]))
+   {-  \eval{test_eval1}  -}
+ 
+  test_eval2=  quote0 (iEval term2 ([],[]))
+   {-  \eval{test_eval2}  -}
+ 
+  test_type1=  iType0 env1 term1
+   {-  \eval{test_type1}  -}
+ 
+  test_type2=  iType0 env2 term2
+   {-  \eval{test_type2}  -}

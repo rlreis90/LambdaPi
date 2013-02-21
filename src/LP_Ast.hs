@@ -85,9 +85,9 @@ module LP_Ast where
      |  Nat_
      |  NatElim_ CTerm_ CTerm_ CTerm_ CTerm_
          
-    |  Vec_ CTerm_ CTerm_
-    |  VecElim_ CTerm_ CTerm_ CTerm_ CTerm_ CTerm_ CTerm_
-        
+     |  Vec_ CTerm_ CTerm_
+     |  VecElim_ CTerm_ CTerm_ CTerm_ CTerm_ CTerm_ CTerm_
+         
      |  Eq_ CTerm_ CTerm_ CTerm_
      |  EqElim_ CTerm_ CTerm_ CTerm_ CTerm_ CTerm_ CTerm_
          
@@ -130,3 +130,6 @@ module LP_Ast where
     |  NFinElim_ Value_ Value_ Value_ Value_ Neutral_
 -- LINE 1620 "LP.lhs" #-}
   type Env_ = [Value_]
+  
+  
+  
