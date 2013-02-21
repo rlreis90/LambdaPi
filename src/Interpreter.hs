@@ -17,11 +17,10 @@ module Interpreter where
 
   readline :: String -> IO (Maybe String)
   
-  readline m = fmap Just $
-    do {
-        putStr m;
-        getLine;
-      }
+  readline m =
+    fmap Just $ do
+        putStr m
+        getLine
       
   addHistory :: MonadException m => String -> m ()
   
@@ -35,7 +34,7 @@ module Interpreter where
           do
             xs <- catch
                    (if inter
-                    then readline (iprompt interp) 
+                    then readline (iprompt interp)
                     else fmap Just getLine)
                    (\_ -> return Nothing)
             case xs of
@@ -77,7 +76,7 @@ module Interpreter where
          Cmd [":help",":?"]   ""        (const Help)   "display this list of commands" ]
   
   helpTxt :: [InteractiveCommand] -> String
-  helpTxt cs
+  helpTxt ics
     =  "List of commands:  Any command may be abbreviated to :c where\n" ++
        "c is the first character in the full name.\n\n" ++
        "<expr>                  evaluate expression\n" ++
@@ -85,7 +84,7 @@ module Interpreter where
        "assume <var> :: <expr>  assume variable\n\n"
        ++
        unlines (map (\ (Cmd cs a _ d) -> let  ct = concat (intersperse ", " (map (++ if null a then "" else " " ++ a) cs))
-                                         in   ct ++ replicate ((24 - length ct) `max` 2) ' ' ++ d) cs)
+                                         in   ct ++ replicate ((24 - length ct) `max` 2) ' ' ++ d) ics)
   
   
   interpretCommand :: String -> IO Command
@@ -219,85 +218,95 @@ module Interpreter where
                                  m `vapp_` n `vapp_` f))))))]
  
   lpve :: Ctx Value_
-  lpve =      [(Global "Zero", VZero_),
-               (Global "Succ", VLam_ (\ n -> VSucc_ n)),
-               (Global "Nat", VNat_),
-               (Global "natElim", cEval_ (Lam_ (Lam_ (Lam_ (Lam_ (Inf_ (NatElim_ (Inf_ (Bound_ 3)) (Inf_ (Bound_ 2)) (Inf_ (Bound_ 1)) (Inf_ (Bound_ 0)))))))) ([], [])),
-               (Global "Nil", VLam_ (\ a -> VNil_ a)),
-               (Global "Cons", VLam_ (\ a -> VLam_ (\ n -> VLam_ (\ x -> VLam_ (\ xs ->
+  lpve =
+    [(Global "Zero", VZero_),
+     (Global "Succ", VLam_ (\ n -> VSucc_ n)),
+     (Global "Nat", VNat_),
+     (Global "natElim", cEval_ (Lam_ (Lam_ (Lam_ (Lam_ (Inf_ (NatElim_ (Inf_ (Bound_ 3)) (Inf_ (Bound_ 2)) (Inf_ (Bound_ 1)) (Inf_ (Bound_ 0)))))))) ([], [])),
+     (Global "Nil", VLam_ (\ a -> VNil_ a)),
+     (Global "Cons", VLam_ (\ a -> VLam_ (\ n -> VLam_ (\ x -> VLam_ (\ xs ->
                               VCons_ a n x xs))))),
-               (Global "Vec", VLam_ (\ a -> VLam_ (\ n -> VVec_ a n))),
-               (Global "vecElim", cEval_ (Lam_ (Lam_ (Lam_ (Lam_ (Lam_ (Lam_ (Inf_ (VecElim_ (Inf_ (Bound_ 5)) (Inf_ (Bound_ 4)) (Inf_ (Bound_ 3)) (Inf_ (Bound_ 2)) (Inf_ (Bound_ 1)) (Inf_ (Bound_ 0)))))))))) ([],[])),
-               (Global "Refl", VLam_ (\ a -> VLam_ (\ x -> VRefl_ a x))),
-               (Global "Eq", VLam_ (\ a -> VLam_ (\ x -> VLam_ (\ y -> VEq_ a x y)))),
-               (Global "eqElim", cEval_ (Lam_ (Lam_ (Lam_ (Lam_ (Lam_ (Lam_ (Inf_ (EqElim_ (Inf_ (Bound_ 5)) (Inf_ (Bound_ 4)) (Inf_ (Bound_ 3)) (Inf_ (Bound_ 2)) (Inf_ (Bound_ 1)) (Inf_ (Bound_ 0)))))))))) ([],[])),
-               (Global "FZero", VLam_ (\ n -> VFZero_ n)),
-               (Global "FSucc", VLam_ (\ n -> VLam_ (\ f -> VFSucc_ n f))),
-               (Global "Fin", VLam_ (\ n -> VFin_ n)),
-               (Global "finElim", cEval_ (Lam_ (Lam_ (Lam_ (Lam_ (Lam_ (Inf_ (FinElim_ (Inf_ (Bound_ 4)) (Inf_ (Bound_ 3)) (Inf_ (Bound_ 2)) (Inf_ (Bound_ 1)) (Inf_ (Bound_ 0))))))))) ([],[]))]
+     (Global "Vec", VLam_ (\ a -> VLam_ (\ n -> VVec_ a n))),
+     (Global "vecElim", cEval_ (Lam_ (Lam_ (Lam_ (Lam_ (Lam_ (Lam_ (Inf_ (VecElim_ (Inf_ (Bound_ 5)) (Inf_ (Bound_ 4)) (Inf_ (Bound_ 3)) (Inf_ (Bound_ 2)) (Inf_ (Bound_ 1)) (Inf_ (Bound_ 0)))))))))) ([],[])),
+     (Global "Refl", VLam_ (\ a -> VLam_ (\ x -> VRefl_ a x))),
+     (Global "Eq", VLam_ (\ a -> VLam_ (\ x -> VLam_ (\ y -> VEq_ a x y)))),
+     (Global "eqElim", cEval_ (Lam_ (Lam_ (Lam_ (Lam_ (Lam_ (Lam_ (Inf_ (EqElim_ (Inf_ (Bound_ 5)) (Inf_ (Bound_ 4)) (Inf_ (Bound_ 3)) (Inf_ (Bound_ 2)) (Inf_ (Bound_ 1)) (Inf_ (Bound_ 0)))))))))) ([],[])),
+     (Global "FZero", VLam_ (\ n -> VFZero_ n)),
+     (Global "FSucc", VLam_ (\ n -> VLam_ (\ f -> VFSucc_ n f))),
+     (Global "Fin", VLam_ (\ n -> VFin_ n)),
+     (Global "finElim", cEval_ (Lam_ (Lam_ (Lam_ (Lam_ (Lam_ (Inf_ (FinElim_ (Inf_ (Bound_ 4)) (Inf_ (Bound_ 3)) (Inf_ (Bound_ 2)) (Inf_ (Bound_ 1)) (Inf_ (Bound_ 0))))))))) ([],[]))]
 
   
-{-# LINE 225 "Interpreter.lhs" #-}
+-- LINE 225 "Interpreter.lhs" #-}
   repLP :: Bool -> IO ()
   repLP b = readevalprint lp (b, [], lpve, lpte)
  
   repST :: Bool -> IO ()
   repST b = readevalprint st (b, [], [], [])
    
-  iinfer int d g t =
-    case iitype int d g t of
-      Left e -> putStrLn e >> return Nothing
+  iinfer :: Interpreter i c v a tinf inf  -> NameEnv v -> Ctx inf -> i -> IO (Maybe a)
+  
+  iinfer interpreter d g t =
+    case iitype interpreter d g t of
+      Left e  -> putStrLn e >> return Nothing
       Right v -> return (Just v)
  
-  handleStmt :: Interpreter i c v t tinf inf
-                -> State v inf -> Stmt i tinf -> IO (State v inf)
-  handleStmt int state@(inter, out, ve, te) stmt =
+  handleStmt :: Interpreter i c v t tinf inf -> State v inf -> Stmt i tinf -> IO (State v inf)
+  
+  handleStmt interpreter state@(inter, out, ve, te) stmt =
     do
       case stmt of
-          Assume ass -> foldM (iassume int) state ass 
+          Assume ass -> foldM (iassume interpreter) state ass 
           Let x e    -> checkEval x e
           Eval e     -> checkEval it e
           PutStrLn x -> putStrLn x >> return state
           Out f      -> return (inter, f, ve, te)
     where
+      it = "it"
       --  checkEval :: String -> i -> IO (State v inf)
       checkEval i t =
-        check int state i t
+        check interpreter state i t
           (\ (y, v) -> do
                          --  ugly, but we have limited space in the paper
                          --  usually, you'd want to have the bound identifier *and*
                          --  the result of evaluation
-                         let outtext = if i == it then render (icprint int (iquote int v) <> text " :: " <> itprint int y)
-                                                  else render (text i <> text " :: " <> itprint int y)
+                         let outtext = render $ if i == it
+                                                  then icprint interpreter (iquote interpreter v) <> text " :: " <> itprint interpreter y
+                                                  else text i <> text " :: " <> itprint interpreter y
                          putStrLn outtext
                          unless (null out) (writeFile out (process outtext)))
-          (\ (y, v) -> (inter, "", (Global i, v) : ve, (Global i, ihastype int y) : te))
+                         
+          (\ (y, v) -> (inter, "", (Global i, v) : ve, (Global i, ihastype interpreter y) : te))
  
-  check :: Interpreter i c v t tinf inf -> State v inf -> String -> i
-           -> ((t, v) -> IO ()) -> ((t, v) -> State v inf) -> IO (State v inf)
-  check int state@(inter, out, ve, te) i t kp k =
+  check :: Interpreter i c v t tinf inf -> State v inf -> String -> i  -> ((t, v) -> IO ()) -> ((t, v) -> State v inf) -> IO (State v inf)
+  
+  check interpreter state@(_, _, ve, te) _ t kp k =
                   do
                     --  typecheck and evaluate
-                    x <- iinfer int ve te t
+                    x <- iinfer interpreter ve te t
                     case x of
                       Nothing  ->
-                        do
-                          --  putStrLn "type error"
+                          --do  putStrLn "type error"
                           return state
                       Just y   ->
                         do
-                          let v = ieval int ve t
+                          let v = ieval interpreter ve t
                           kp (y, v)
                           return (k (y, v))
  
-  stassume state@(inter, out, ve, te) x t = return (inter, out, ve, (Global x, t) : te)
+  stassume :: Monad m => (a, b, c, [(Name, d)]) -> String -> d -> m (a, b, c, [(Name, d)])
+ 
+  stassume (inter, out, ve, te) x t = return (inter, out, ve, (Global x, t) : te)
+  
+  lpassume :: (Bool, String, NameEnv Value_, Ctx Value_) -> String -> CTerm_ -> IO (State Value_ Value_)
+  
   lpassume state@(inter, out, ve, te) x t =
     check lp state x (Ann_ t (Inf_ Star_))
-          (\ (y, v) -> return ()) --  putStrLn (render (text x <> text " :: " <> cPrint_ 0 0 (quote0_ v))))
-          (\ (y, v) -> (inter, out, ve, (Global x, v) : te))
+          (\ (_, _) -> return ()) --  putStrLn (render (text x <> text " :: " <> cPrint_ 0 0 (quote0_ v))))
+          (\ (_, v) -> (inter, out, ve, (Global x, v) : te))
   
   
-  it = "it"
+
 
   process :: String -> String
   process = unlines . map (\ x -> "< " ++ x) . lines
