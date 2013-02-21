@@ -14,6 +14,8 @@ module Interpreter where
   import Parser_LP
   import Printer
   import Printer_LP
+  
+  import Globals
 
   addHistory :: MonadException m => String -> m ()
   
@@ -81,21 +83,22 @@ module Interpreter where
   
   
   interpretCommand :: String -> IO Command
-  interpretCommand x
-    =  if ":" `isPrefixOf` x then
-         do  let  (cmd,t')  =  break isSpace x
+  interpretCommand text
+    =  if ":" `isPrefixOf` text then
+         do  let  (cmd,t')  =  break isSpace text
                   t         =  dropWhile isSpace t'
+                  
              --  find matching commands
              let  matching  =  filter (\ (Cmd cs _ _ _) -> any (isPrefixOf cmd) cs) commands
              case matching of
-               []  ->  do  putStrLn ("Unknown command `" ++ cmd ++ "'. Type :? for help.")
-                           return Noop
-               [Cmd _ _ f _]
+               [Cmd _ _ f _] 
                    ->  return (f t)
-               x   ->  do  putStrLn ("Ambiguous command, could be " ++ concat (intersperse ", " [ head cs | Cmd cs _ _ _ <- matching ]) ++ ".")
-                           return Noop
+               []  ->  putStrLn ("Unknown command `" ++ cmd ++ "'. Type :? for help.")
+                       >> return Noop
+               _   ->  putStrLn ("Ambiguous command, could be " ++ intercalate ", " [ head cs | Cmd cs _ _ _ <- matching ] ++ ".")
+                       >> return Noop
        else
-         return (Compile (CompileInteractive x))
+         return (Compile $ CompileInteractive text)
   
   handleCommand :: Interpreter i c v t tinf inf -> State v inf -> Command -> IO (Maybe (State v inf))
   handleCommand interpreter state@(inter, _, ve, te) cmd
@@ -103,8 +106,8 @@ module Interpreter where
          Quit   ->  when (not inter) (putStrLn "!@#$^&*") >> return Nothing
          Noop   ->  return (Just state)
          Help   ->  putStr (helpTxt commands) >> return (Just state)
-         TypeOf x ->
-                    do  x <- parseIO "<interactive>" (iiparse interpreter) x
+         TypeOf e ->
+                    do  x <- parseIO "<interactive>" (iiparse interpreter) e
                         t <- maybe (return Nothing) (iinfer interpreter ve te) x
                         maybe (return ()) (\u -> putStrLn (render (itprint interpreter u))) t
                         return (Just state)
@@ -145,7 +148,7 @@ module Interpreter where
   st :: Interpreter ITerm CTerm Value Type Info Info
   st = I { iname = "the simply typed lambda calculus",
            iprompt = "ST> ",
-           iitype = \ v c -> iType 0 c,
+           iitype = \ _ c -> iType 0 c,
            iquote = quote0,
            ieval  = \ e x -> iEval x (e, []),
            ihastype = HasType,
@@ -154,11 +157,15 @@ module Interpreter where
            iiparse = parseITerm 0 [],
            isparse = parseStmt [],
            iassume = \ s (x, t) -> stassume s x t }
- 
+        where 
+          stassume (inter, out, ve, te) x t 
+              =     return (inter, out, ve, (Global x, t) : te)
+  
+          
   lp :: Interpreter ITerm_ CTerm_ Value_ Value_ CTerm_ Value_
   lp = I { iname = "lambda-Pi",
            iprompt = "LP> ",
-           iitype = \ v c -> iType_ 0 (v, c),
+           iitype = curry $ iType_ 0,
            iquote = quote0_,
            ieval = \ e x -> iEval_ x (e, []),
            ihastype = id,
@@ -168,75 +175,20 @@ module Interpreter where
            isparse = parseStmt_ [],
            iassume = \ s (x, t) -> lpassume s x t }
  
-  lpte :: Ctx Value_
-  lpte =      [(Global "Zero", VNat_),
-               (Global "Succ", VPi_ VNat_ (\ _ -> VNat_)),
-               (Global "Nat", VStar_),
-               (Global "natElim", VPi_ (VPi_ VNat_ (\ _ -> VStar_)) (\ m ->
-                                 VPi_ (m `vapp_` VZero_) (\ _ ->
-                                 VPi_ (VPi_ VNat_ (\ k -> VPi_ (m `vapp_` k) (\ _ -> (m `vapp_` (VSucc_ k))))) ( \ _ ->
-                                 VPi_ VNat_ (\ n -> m `vapp_` n))))),
-               (Global "Nil", VPi_ VStar_ (\ a -> VVec_ a VZero_)),
-               (Global "Cons", VPi_ VStar_ (\ a ->
-                              VPi_ VNat_ (\ n ->
-                              VPi_ a (\ _ -> VPi_ (VVec_ a n) (\ _ -> VVec_ a (VSucc_ n)))))),
-               (Global "Vec", VPi_ VStar_ (\ _ -> VPi_ VNat_ (\ _ -> VStar_))),
-               (Global "vecElim", VPi_ VStar_ (\ a ->
-                                 VPi_ (VPi_ VNat_ (\ n -> VPi_ (VVec_ a n) (\ _ -> VStar_))) (\ m ->
-                                 VPi_ (m `vapp_` VZero_ `vapp_` (VNil_ a)) (\ _ ->
-                                 VPi_ (VPi_ VNat_ (\ n ->
-                                       VPi_ a (\ x ->
-                                       VPi_ (VVec_ a n) (\ xs ->
-                                       VPi_ (m `vapp_` n `vapp_` xs) (\ _ ->
-                                       m `vapp_` VSucc_ n `vapp_` VCons_ a n x xs))))) (\ _ ->
-                                 VPi_ VNat_ (\ n ->
-                                 VPi_ (VVec_ a n) (\ xs -> m `vapp_` n `vapp_` xs))))))),
-               (Global "Refl", VPi_ VStar_ (\ a -> VPi_ a (\ x ->
-                              VEq_ a x x))),
-               (Global "Eq", VPi_ VStar_ (\ a -> VPi_ a (\ x -> VPi_ a (\ y -> VStar_)))),
-               (Global "eqElim", VPi_ VStar_ (\ a ->
-                                VPi_ (VPi_ a (\ x -> VPi_ a (\ y -> VPi_ (VEq_ a x y) (\ _ -> VStar_)))) (\ m ->
-                                VPi_ (VPi_ a (\ x -> m `vapp_` x `vapp_` x `vapp_` VRefl_ a x)) (\ _ ->
-                                VPi_ a (\ x -> VPi_ a (\ y ->
-                                VPi_ (VEq_ a x y) (\ eq ->
-                                m `vapp_` x `vapp_` y `vapp_` eq))))))),
-               (Global "FZero", VPi_ VNat_ (\ n -> VFin_ (VSucc_ n))),
-               (Global "FSucc", VPi_ VNat_ (\ n -> VPi_ (VFin_ n) (\ f ->
-                               VFin_ (VSucc_ n)))),
-               (Global "Fin", VPi_ VNat_ (\ n -> VStar_)),
-               (Global "finElim", VPi_ (VPi_ VNat_ (\ n -> VPi_ (VFin_ n) (\ _ -> VStar_))) (\ m ->
-                                 VPi_ (VPi_ VNat_ (\ n -> m `vapp_` (VSucc_ n) `vapp_` (VFZero_ n))) (\ _ ->
-                                 VPi_ (VPi_ VNat_ (\ n -> VPi_ (VFin_ n) (\ f -> VPi_ (m `vapp_` n `vapp_` f) (\ _ -> m `vapp_` (VSucc_ n) `vapp_` (VFSucc_ n f))))) (\ _ ->
-                                 VPi_ VNat_ (\ n -> VPi_ (VFin_ n) (\ f ->
-                                 m `vapp_` n `vapp_` f))))))]
- 
-  lpve :: Ctx Value_
-  lpve =
-    [(Global "Zero", VZero_),
-     (Global "Succ", VLam_ (\ n -> VSucc_ n)),
-     (Global "Nat", VNat_),
-     (Global "natElim", cEval_ (Lam_ (Lam_ (Lam_ (Lam_ (Inf_ (NatElim_ (Inf_ (Bound_ 3)) (Inf_ (Bound_ 2)) (Inf_ (Bound_ 1)) (Inf_ (Bound_ 0)))))))) ([], [])),
-     (Global "Nil", VLam_ (\ a -> VNil_ a)),
-     (Global "Cons", VLam_ (\ a -> VLam_ (\ n -> VLam_ (\ x -> VLam_ (\ xs ->
-                              VCons_ a n x xs))))),
-     (Global "Vec", VLam_ (\ a -> VLam_ (\ n -> VVec_ a n))),
-     (Global "vecElim", cEval_ (Lam_ (Lam_ (Lam_ (Lam_ (Lam_ (Lam_ (Inf_ (VecElim_ (Inf_ (Bound_ 5)) (Inf_ (Bound_ 4)) (Inf_ (Bound_ 3)) (Inf_ (Bound_ 2)) (Inf_ (Bound_ 1)) (Inf_ (Bound_ 0)))))))))) ([],[])),
-     (Global "Refl", VLam_ (\ a -> VLam_ (\ x -> VRefl_ a x))),
-     (Global "Eq", VLam_ (\ a -> VLam_ (\ x -> VLam_ (\ y -> VEq_ a x y)))),
-     (Global "eqElim", cEval_ (Lam_ (Lam_ (Lam_ (Lam_ (Lam_ (Lam_ (Inf_ (EqElim_ (Inf_ (Bound_ 5)) (Inf_ (Bound_ 4)) (Inf_ (Bound_ 3)) (Inf_ (Bound_ 2)) (Inf_ (Bound_ 1)) (Inf_ (Bound_ 0)))))))))) ([],[])),
-     (Global "FZero", VLam_ (\ n -> VFZero_ n)),
-     (Global "FSucc", VLam_ (\ n -> VLam_ (\ f -> VFSucc_ n f))),
-     (Global "Fin", VLam_ (\ n -> VFin_ n)),
-     (Global "finElim", cEval_ (Lam_ (Lam_ (Lam_ (Lam_ (Lam_ (Inf_ (FinElim_ (Inf_ (Bound_ 4)) (Inf_ (Bound_ 3)) (Inf_ (Bound_ 2)) (Inf_ (Bound_ 1)) (Inf_ (Bound_ 0))))))))) ([],[]))]
-
-  
+        where 
+          lpassume state@(inter, out, ve, te) x t =
+            check lp state x (Ann_ t (Inf_ Star_))
+                  (\ (_, _) -> return ()) --  putStrLn (render (text x <> text " :: " <> cPrint_ 0 0 (quote0_ v))))
+                  (\ (_, v) -> (inter, out, ve, (Global x, v) : te))
+                  
+                  
 -- LINE 225 "Interpreter.lhs" #-}
   repLP :: Bool -> IO ()
   repLP b = readevalprint lp (b, [], lpve, lpte)
  
   repST :: Bool -> IO ()
   repST b = readevalprint st (b, [], [], [])
-   
+  
   iinfer :: Interpreter i c v a tinf inf  -> NameEnv v -> Ctx inf -> i -> IO (Maybe a)
   
   iinfer interpreter d g t =
@@ -274,29 +226,18 @@ module Interpreter where
   check :: Interpreter i c v t tinf inf -> State v inf -> String -> i  -> ((t, v) -> IO ()) -> ((t, v) -> State v inf) -> IO (State v inf)
   
   check interpreter state@(_, _, ve, te) _ t kp k =
-                  do
-                    --  typecheck and evaluate
-                    x <- iinfer interpreter ve te t
-                    case x of
-                      Nothing  ->
-                          --do  putStrLn "type error"
-                          return state
-                      Just y   ->
-                        do
-                          let v = ieval interpreter ve t
-                          kp (y, v)
-                          return (k (y, v))
- 
-  stassume :: Monad m => (a, b, c, [(Name, d)]) -> String -> d -> m (a, b, c, [(Name, d)])
- 
-  stassume (inter, out, ve, te) x t = return (inter, out, ve, (Global x, t) : te)
-  
-  lpassume :: (Bool, String, NameEnv Value_, Ctx Value_) -> String -> CTerm_ -> IO (State Value_ Value_)
-  
-  lpassume state@(inter, out, ve, te) x t =
-    check lp state x (Ann_ t (Inf_ Star_))
-          (\ (_, _) -> return ()) --  putStrLn (render (text x <> text " :: " <> cPrint_ 0 0 (quote0_ v))))
-          (\ (_, v) -> (inter, out, ve, (Global x, v) : te))
+      do
+        --  typecheck and evaluate
+        x <- iinfer interpreter ve te t
+        case x of
+          Nothing  ->
+              --do  putStrLn "type error"
+              return state
+          Just y   ->
+            do
+              let v = ieval interpreter ve t
+              kp (y, v)
+              return (k (y, v))
   
   
 

@@ -1,7 +1,6 @@
 
 module LambdaPi_Core where
   import Control.Monad.Error
-  import Text.PrettyPrint.HughesPJ hiding (parens)
       
   import LP_Ast
   import Printer
@@ -340,7 +339,7 @@ module LambdaPi_Core where
   iType_ ii g (Free_ x)
     =     case lookup x (snd g) of
             Just ty        ->  return ty
-            Nothing        ->  throwError ("unknown identifier: " ++ render (iPrint_ 0 0 (Free_ x)))
+            Nothing        ->  throwError ("unknown identifier: " ++ iRender (Free_ x))
   iType_ ii g (e1 :$: e2)
     =     do  si <- iType_ ii g e1
               case si of
@@ -411,7 +410,10 @@ module LambdaPi_Core where
   cType_ :: Int -> (NameEnv Value_,Context_) -> CTerm_ -> Type_ -> Result ()
   cType_ ii g (Inf_ e) v 
     =     do  v' <- iType_ ii g e
-              unless ( quote0_ v == quote0_ v') (throwError ("type mismatch:\n" ++ "type inferred:  " ++ render (cPrint_ 0 0 (quote0_ v')) ++ "\n" ++ "type expected:  " ++ render (cPrint_ 0 0 (quote0_ v)) ++ "\n" ++ "for expression: " ++ render (iPrint_ 0 0 e)))
+              unless ( quote0_ v == quote0_ v' )
+                 $ throwError ("type mismatch:\n" ++ "type inferred:  " ++ cRender (quote0_ v')
+                                          ++ "\n" ++ "type expected:  " ++ cRender (quote0_ v)
+                                          ++ "\n" ++ "for expression: " ++ iRender e)
   cType_ ii g (Lam_ e) ( VPi_ ty ty')
     =     cType_  (ii + 1) ((\ (d,g) -> (d,  ((Local ii, ty ) : g))) g)
                   (cSubst_ 0 (Free_ (Local ii)) e) ( ty' (vfree_ (Local ii))) 

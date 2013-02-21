@@ -47,3 +47,9 @@ module Printer_LP where
   nestedForall_ :: Int -> [(Int, CTerm_)] -> CTerm_ -> Doc
   nestedForall_ ii ds (Inf_ (Pi_ d r)) = nestedForall_ (ii + 1) ((ii, d) : ds) r
   nestedForall_ ii ds x                = sep [text "forall " <> sep [parensIf True (text (vars !! n) <> text " :: " <> cPrint_ 0 n d) | (n,d) <- reverse ds] <> text " .", cPrint_ 0 ii x]
+  
+  cRender :: CTerm_ -> String
+  cRender = render . cPrint_ 0 0
+  
+  iRender :: ITerm_ -> String
+  iRender = render . iPrint_ 0 0
