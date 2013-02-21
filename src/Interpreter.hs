@@ -15,13 +15,6 @@ module Interpreter where
   import Printer
   import Printer_LP
 
-  readline :: String -> IO (Maybe String)
-  
-  readline m =
-    fmap Just $ do
-        putStr m
-        getLine
-      
   addHistory :: MonadException m => String -> m ()
   
   addHistory s = runInputT defaultSettings (putHistory (HlHist.addHistory s HlHist.emptyHistory))
@@ -29,30 +22,30 @@ module Interpreter where
   
   --  read-eval-print loop
   readevalprint :: Interpreter i c v t tinf inf -> State v inf -> IO ()
-  readevalprint interpreter top_state@(inter, _, _, _) =
+  
+  readevalprint interpreter top_state@(interactive, _, _, _) =
+  
     let rec interp state =
-          do
-            xs <- catch
-                   (if inter
-                    then readline (iprompt interp)
-                    else fmap Just getLine)
-                   (\_ -> return Nothing)
-            case xs of
-              Nothing   ->  return ()
-              Just ""   ->  rec interp state
-              Just x    ->
+          let runcommand value =
                 do
-                  when inter (addHistory x)
-                  c  <- interpretCommand x
-                  state' <- handleCommand interp state c
+                  when interactive $ addHistory value
+                  command  <- interpretCommand value
+                  state' <- handleCommand interp state command
                   maybe (return ()) (rec interp) state'
+          in
+          do
+            input <- do
+                when interactive $ putStr (iprompt interp)
+                getLine
+                    
+            if null input then rec interp state else runcommand input
     in
       do
         --  welcome
-        when inter $ putStrLn ("Interpreter for " ++ iname interpreter ++ ".\n" ++
-                               "Type :? for help.")
+        when interactive $ putStrLn ("Interpreter for " ++ iname interpreter ++ ".\n" ++ "Type :? for help.")
         --  enter loop
         rec interpreter top_state
+        
 -- LINE 40 "Interpreter.lhs" #-}
   data Command = TypeOf String
                | Compile CompileForm
