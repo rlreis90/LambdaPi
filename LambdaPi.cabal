@@ -9,7 +9,9 @@ executable LambdaPi
   main-is:         Main.hs
   build-depends:   base >= 4
   ghc-options:     -Wall
-  other-modules:   Globals
+  other-modules:   
+                   Globals,
+                   Lens
 
 library 
   build-depends:   
@@ -22,5 +24,6 @@ library
   ghc-options:     -Wall
   other-modules:   
                    Main,
-                   Globals
+                   Globals,
+                   Lens
 

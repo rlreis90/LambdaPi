@@ -85,9 +85,9 @@ module LP_Ast where
      |  Nat_
      |  NatElim_ CTerm_ CTerm_ CTerm_ CTerm_
          
-    |  Vec_ CTerm_ CTerm_
-    |  VecElim_ CTerm_ CTerm_ CTerm_ CTerm_ CTerm_ CTerm_
-        
+     |  Vec_ CTerm_ CTerm_
+     |  VecElim_ CTerm_ CTerm_ CTerm_ CTerm_ CTerm_ CTerm_
+         
      |  Eq_ CTerm_ CTerm_ CTerm_
      |  EqElim_ CTerm_ CTerm_ CTerm_ CTerm_ CTerm_ CTerm_
          
