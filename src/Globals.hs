@@ -44,8 +44,8 @@ module Globals where
            VPi_ VNat_ (\ n -> VPi_ (VFin_ n) (\ f ->
            m `vapp_` n `vapp_` f))))))]
  
-  lpve :: Ctx Value_
-  lpve =
+  lambdaPiValueEnv :: Ctx Value_
+  lambdaPiValueEnv =
     [(Global "Zero", VZero_),
      (Global "Succ", VLam_ (\ n -> VSucc_ n)),
      (Global "Nat", VNat_),

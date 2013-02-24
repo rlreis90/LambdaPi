@@ -7,7 +7,7 @@ module REPL where
   import Globals
   
   import Parser_LP
-  import Printer
+  import VPrinter
   
   import Prelude hiding (putStr,putStrLn)
   import Operators
@@ -40,7 +40,7 @@ module REPL where
     
                   
   lambdaPi :: Bool -> IO ()
-  lambdaPi b = readevalprint lp (b, [], lpve, lambdaPiTypeEnv)
+  lambdaPi b = readevalprint lp (b, [], lambdaPiValueEnv, lambdaPiTypeEnv)
  
   repST :: Bool -> IO ()
   repST b = readevalprint st (b, [], [], [])

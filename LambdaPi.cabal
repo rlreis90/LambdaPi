@@ -12,7 +12,8 @@ executable LambdaPi
   other-modules:   
                    Globals,
                    REPL,
-                   Operators
+                   Operators,
+                   VPrinter
 
 library 
   build-depends:   
@@ -29,5 +30,6 @@ library
                    Main,
                    Globals,
                    REPL,
-                   Operators
+                   Operators,
+                   VPrinter
 
