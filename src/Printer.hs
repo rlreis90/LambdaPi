@@ -2,7 +2,7 @@ module Printer where
   import Prelude hiding (print)
   import Text.PrettyPrint.HughesPJ
   
-  import LP_Ast
+  import Ast
   
   tPrint :: Int -> Type -> Doc
   tPrint _ (TFree (Global s))  =  text s

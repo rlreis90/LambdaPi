@@ -1,16 +1,15 @@
 
-module LP_Ast where    
+module Ast where    
     
   data Stmt i tinf = Let String i           --  let x = t
                    | Assume [(String,tinf)] --  assume x :: t, assume x :: *
                    | Eval i
                    | PutStrLn String        --  lhs2TeX hacking, allow to print "magic" string
                    | Out String             --  more lhs2TeX hacking, allow to print to files
-    deriving (Show)
+                   deriving (Show)
     
   type NameEnv v = [(Name, v)]
   type Ctx inf = [(Name, inf)]
-  type State v inf = (Bool, String, NameEnv v, Ctx inf)
   
   data ITerm
      =  Ann    CTerm Type
@@ -58,7 +57,6 @@ module LP_Ast where
   
   type Env = [Value]
   
-  
   data CTerm_
      =  Inf_  ITerm_
      |  Lam_  CTerm_
@@ -87,7 +85,7 @@ module LP_Ast where
          
      |  Vec_ CTerm_ CTerm_
      |  VecElim_ CTerm_ CTerm_ CTerm_ CTerm_ CTerm_ CTerm_
-         
+     
      |  Eq_ CTerm_ CTerm_ CTerm_
      |  EqElim_ CTerm_ CTerm_ CTerm_ CTerm_ CTerm_ CTerm_
          
@@ -96,6 +94,9 @@ module LP_Ast where
          
     deriving (Show, Eq)
         
+
+  type Env_ = [Value_]
+  
   data Value_
      =  VLam_  (Value_ -> Value_)
      |  VStar_
@@ -120,16 +121,10 @@ module LP_Ast where
   data Neutral_
      =  NFree_  Name
      |  NApp_  Neutral_ Value_
--- LINE 2 "Neutral_Nat.lhs" #-}
-    |  NNatElim_ Value_ Value_ Value_ Neutral_
--- LINE 2 "Neutral_Vec.lhs" #-}
-    |  NVecElim_ Value_ Value_ Value_ Value_ Value_ Neutral_
--- LINE 2 "Neutral_Eq.lhs" #-}
-    |  NEqElim_ Value_ Value_ Value_ Value_ Value_ Neutral_
--- LINE 2 "Neutral_Fin.lhs" #-}
-    |  NFinElim_ Value_ Value_ Value_ Value_ Neutral_
--- LINE 1620 "LP.lhs" #-}
-  type Env_ = [Value_]
-  
-  
-  
+     |  NNatElim_ Value_ Value_ Value_ Neutral_
+
+     |  NVecElim_ Value_ Value_ Value_ Value_ Value_ Neutral_
+
+     |  NEqElim_ Value_ Value_ Value_ Value_ Value_ Neutral_
+     |  NFinElim_ Value_ Value_ Value_ Value_ Neutral_
+     

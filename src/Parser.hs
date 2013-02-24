@@ -6,7 +6,7 @@ module Parser where
   import Text.ParserCombinators.Parsec.Token
   import Text.ParserCombinators.Parsec.Language
   
-  import LP_Ast
+  import Ast
   
   lambdaPi = makeTokenParser (haskellStyle { identStart = letter <|> P.char '_',
                                              reservedNames = ["forall", "let", "assume", "putStrLn", "out"] })

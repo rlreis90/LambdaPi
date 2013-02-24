@@ -11,7 +11,9 @@ executable LambdaPi
   ghc-options:     -Wall
   other-modules:   
                    Globals,
-                   Lens
+                   Lens,
+                   REPL,
+                   Operators
 
 library 
   build-depends:   
@@ -25,5 +27,7 @@ library
   other-modules:   
                    Main,
                    Globals,
-                   Lens
+                   Lens,
+                   REPL,
+                   Operators
 

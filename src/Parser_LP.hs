@@ -4,7 +4,7 @@ module Parser_LP where
   import Text.ParserCombinators.Parsec hiding (parse, State)
   import Text.ParserCombinators.Parsec.Token
   
-  import LP_Ast
+  import Ast
   import Parser
                                              
   parseStmt_ :: [String] -> CharParser () (Stmt ITerm_ CTerm_)

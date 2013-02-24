@@ -1,9 +1,9 @@
 module Globals where
-  import LP_Ast
+  import Ast
   import LambdaPi_Core
-
-  lpte :: Ctx Value_
-  lpte = 
+  
+  lambdaPiTypeEnv :: Ctx Value_
+  lambdaPiTypeEnv =
     [(Global "Zero", VNat_),
      (Global "Succ", VPi_ VNat_ $ const VNat_),
      (Global "Nat", VStar_),
@@ -26,8 +26,7 @@ module Globals where
                  m `vapp_` VSucc_ n `vapp_` VCons_ a n x xs))))) (\ _ ->
            VPi_ VNat_ (\ n ->
            VPi_ (VVec_ a n) (\ xs -> m `vapp_` n `vapp_` xs))))))),
-     (Global "Refl", VPi_ VStar_ (\ a -> VPi_ a (\ x ->
-        VEq_ a x x))),
+     (Global "Refl", VPi_ VStar_ (\ a -> VPi_ a (\ x ->  VEq_ a x x))),
      (Global "Eq", VPi_ VStar_ (\ a -> VPi_ a (\ x -> VPi_ a (\ y -> VStar_)))),
      (Global "eqElim", VPi_ VStar_ (\ a ->
           VPi_ (VPi_ a (\ x -> VPi_ a (\ y -> VPi_ (VEq_ a x y) (\ _ -> VStar_)))) (\ m ->

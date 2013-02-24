@@ -1,8 +1,9 @@
+
 module Printer_LP where
   import Prelude hiding (print)
   import Text.PrettyPrint.HughesPJ hiding (parens)
   
-  import LP_Ast
+  import Ast
   import Printer
 
   iPrint_ :: Int -> Int -> ITerm_ -> Doc

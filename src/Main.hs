@@ -1,6 +1,6 @@
 module Main where
 
-import Interpreter
+import REPL
   
 main :: IO ()
-main = repLP True
+main = lambdaPi True
