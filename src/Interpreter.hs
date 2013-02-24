@@ -5,8 +5,6 @@ module Interpreter where
   import Data.Char
   import Text.PrettyPrint.HughesPJ hiding (parens)
   import Text.ParserCombinators.Parsec hiding (parse, State)
-  import System.Console.Haskeline hiding (catch)
-  import qualified System.Console.Haskeline.History as HlHist
   
   import LambdaPi_Core
   import Ast
@@ -17,30 +15,26 @@ module Interpreter where
   import Operators
   
   type InterpreterState v inf = (Bool, String, NameEnv v, Ctx inf)
-  
-  addHistory :: MonadException m => String -> m ()  
-  addHistory s = runInputT defaultSettings (putHistory (HlHist.addHistory s HlHist.emptyHistory))
     
   data Command = TypeOf String
-               | Compile CompileForm
+               | Compile Form
                | Browse
                | Quit
                | Help
                | Noop
  
-  data CompileForm = CompileInteractive  String
-                   | CompileFile         String
+  data Form = Interactive  String
+            | File         String
   
   data InteractiveCommand = Cmd [String] String (String -> Command) String
   
   commands :: [InteractiveCommand]
   commands
-    =  [ Cmd [":type"]        "<expr>"  TypeOf         "print type of expression",
-         Cmd [":browse"]      ""        (const Browse) "browse names in scope",
-         Cmd [":load"]        "<file>"  (Compile . CompileFile)
-                                                       "load program from file",
-         Cmd [":quit"]        ""        (const Quit)   "exit interpreter",
-         Cmd [":help",":?"]   ""        (const Help)   "display this list of commands" ]
+    =  [ Cmd [":type"]        "<expr>"  TypeOf            "print type of expression",
+         Cmd [":browse"]      ""        (const Browse)    "browse names in scope",
+         Cmd [":load"]        "<file>"  (Compile . File)  "load program from file",
+         Cmd [":quit"]        ""        (const Quit)      "exit interpreter",
+         Cmd [":help",":?"]   ""        (const Help)      "display this list of commands" ]
   
   helpTxt :: [InteractiveCommand] -> String
   helpTxt ics
@@ -72,14 +66,14 @@ module Interpreter where
                                   putStrLn ("Ambiguous command, could be " ++ intercalate ", " [ head cs | Cmd cs _ _ _ <- matching ] ++ ".")
                                   return Noop
        else
-         return (Compile $ CompileInteractive input)
+         return (Compile $ Interactive input)
   
   handleCommand :: Interpreter i c v t tinf inf ->
                    InterpreterState v inf ->
                    Command ->
                    IO (Maybe (InterpreterState v inf))
   
-  handleCommand interpreter state@(inter, _, valueEnv, typeEnv) cmd =
+  handleCommand interp state@(inter, _, valueEnv, typeEnv) cmd =
     let done = return $ Just state
     in
     case cmd of
@@ -91,26 +85,26 @@ module Interpreter where
        
        Help     ->  putStr (helpTxt commands) >> done
                       
-       TypeOf e ->  parseIO "<interactive>" (iiparse interpreter) e
-                      >>= maybe (return Nothing) (iinfer interpreter valueEnv typeEnv)
-                      >>= maybe (return ()) (putStrLn . render . itprint interpreter)
+       TypeOf e ->  parseIO "<interactive>" (iiparse interp) e
+                      >>= maybe (return Nothing) (iinfer interp valueEnv typeEnv)
+                      >>= maybe (return ()) (putStrLn . render . itprint interp)
                       >> done
                      
        Browse    -> putStr (unlines [ symbol | Global symbol <- nub (fmap fst typeEnv) |> reverse ])
                       >> done
-                       
-       Compile form ->
-                     case form of                     
-                       CompileInteractive s -> 
-                         parseIO "<interactive>" (isparse interpreter) s
-                          >>= maybe (return state) (handleStmt interpreter state)
-                          
-                       CompileFile path     ->                       
-                         readFile path
-                           >>= parseIO path (many $ isparse interpreter)
-                           >>= maybe (return state) (foldM (handleStmt interpreter) state)
+
+       Compile from -> 
+                    case from of                     
+                        Interactive command -> 
+                           parseIO "<interactive>" (isparse interp) command
+                             >>= maybe (return state) (handleStmt interp state)
                            
-                      |> fmap Just
+                        File path     ->                       
+                          readFile path
+                            >>= parseIO path (many $ isparse interp)
+                            >>= maybe (return state) (foldM (handleStmt interp) state)
+                            
+                    |> fmap Just
    
   data Interpreter i c v t tinf inf =
     I { iname :: String,

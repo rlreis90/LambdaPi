@@ -11,16 +11,16 @@ module Printer where
   vars :: [String]
   vars = [ c : n | n <- "" : map show [1..], c <- "xyz" ++ ['a'..'w'] ]
   
-  -- TODO: Printing: Higher kinded types should have functional names
+  -- TODO: Higher kinded types should have functional names
   -- for example: select name "f" when kind is "* -> *"
   
-  -- TODO: Printing: Improve collision detection
+  -- TODO: Improve collision detection
   -- don't repeat variable names as in "x : (x : Nat) -> *"
   
-  -- TODO: Printing: Capitalize Type variables
+  -- TODO: Capitalize Type variables
   -- instead of "x : *", have "A : *"
 
-  -- TODO: Printing: Remove unreferenced variables from types.
+  -- TODO: Remove unreferenced variables from types.
   -- for example: in the type "(x : Nat) -> Type"
   -- if "x" does not occur in "Type", then the type should become: "Nat -> Type"
   
@@ -40,10 +40,10 @@ module Printer where
   cPrint :: Int -> Int -> CTerm -> Doc
   cPrint p i (Inf inf)    = iPrint p i inf
   cPrint p i (Lam c)      = parensIf (p > 0) (text "\\ " <> text (vars !! i) <> text " -> " <> cPrint 0 (i + 1) c)
-  
-  
-  print :: CTerm -> String
-  print = render . cPrint 0 0
+    
+  printCTerm :: CTerm -> String
+  printCTerm = render . cPrint 0 0
   
   printType :: Type -> String
   printType = render . tPrint 0
+  
