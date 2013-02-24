@@ -5,7 +5,7 @@ module LambdaPi_Core where
   import Operators
  
   import Ast
-  import Printer_LP
+  import Printer
   import Data.Maybe (fromMaybe)
   type Result a = Either String a
   

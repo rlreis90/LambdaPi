@@ -37,14 +37,14 @@ module Parser_LP where
                              (x,t) <- parens lambdaPi
                                         (do
                                            x <- identifier lambdaPi
-                                           reserved lambdaPi "::"
+                                           reserved lambdaPi ":"
                                            t <- parseCTerm_ 0 (if b then e else [])
                                            return (x,t))
                              (rec (x : e) (t : ts) <|> return (x : e, t : ts))
                       in rec e [])
                      <|>
                      do  x <- identifier lambdaPi
-                         reserved lambdaPi "::"
+                         reserved lambdaPi ":"
                          t <- parseCTerm_ 0 e
                          return (x : e, [t])
                                                  
@@ -81,7 +81,7 @@ module Parser_LP where
     where
       rest t =
         do
-          reserved lambdaPi "::"
+          reserved lambdaPi ":"
           t' <- parseCTerm_ 0 e
           return (Ann_ t t')
   parseITerm_ 2 e =

@@ -7,7 +7,7 @@ module REPL where
   import Globals
   
   import Parser_LP
-  import Printer_LP
+  import Printer
   
   import Operators
   
