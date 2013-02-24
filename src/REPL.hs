@@ -9,6 +9,7 @@ module REPL where
   import Parser_LP
   import Printer
   
+  import Prelude hiding (putStr,putStrLn)
   import Operators
   
   --  read-eval-print loop
@@ -25,14 +26,14 @@ module REPL where
           in
           do
             input <- do
-                when interactive $ putStr (iprompt interp)
+                putStr (iprompt interp) |> when interactive
                 getLine
                     
             if null input then rec interp state else runcommand input
     in
       do
         --  welcome
-        putStrLn ("Interpreter for " ++ iname interpreter ++ ".\n" ++ "Type :? for help.")
+        putStrLn ( "Interpreter for " ++ iname interpreter ++ ".\n" ++ "Type :? for help.")
           |> when interactive
         --  enter loop
         rec interpreter top_state
@@ -61,5 +62,5 @@ module REPL where
         where 
           lpassume state@(inter, out, ve, te) x t =
             check lp state x (Ann_ t (Inf_ Star_))
-                  (\ (_, _) -> return ()) --  putStrLn (render (text x <> text " :: " <> cPrint_ 0 0 (quote0_ v))))
+                  (\ (_, _) -> return ()) --  putStrLn (render (text x <> text " : " <> cPrint_ 0 0 (quote0_ v))))
                   (\ (_, v) -> (inter, out, ve, (Global x, v) : te))

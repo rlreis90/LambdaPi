@@ -21,14 +21,14 @@ module Parser where
                              (x,t) <- parens lambdaPi
                                         (do
                                            x <- identifier simplyTyped 
-                                           reserved simplyTyped "::"
+                                           reserved simplyTyped ":"
                                            t <- pInfo
                                            return (x,t))
                              (rec (x : e) (t : ts) <|> return (x : e, t : ts))
                       in rec [] [])
                      <|>
                      do  x <- identifier simplyTyped 
-                         reserved simplyTyped "::"
+                         reserved simplyTyped ":"
                          t <- pInfo
                          return ([x], [t])
     where
@@ -91,7 +91,7 @@ module Parser where
     where
       rest t =
         do
-          reserved simplyTyped "::"
+          reserved simplyTyped ":"
           t' <- parseType 0 e
           return (Ann t t')
   parseITerm 2 e =

@@ -11,7 +11,6 @@ executable LambdaPi
   ghc-options:     -Wall
   other-modules:   
                    Globals,
-                   Lens,
                    REPL,
                    Operators
 
@@ -21,13 +20,14 @@ library
                    haskeline,
                    parsec,
                    pretty,
-                   mtl
+                   mtl,
+                   utf8-string,
+                   bytestring
   hs-source-dirs:  src
   ghc-options:     -Wall
   other-modules:   
                    Main,
                    Globals,
-                   Lens,
                    REPL,
                    Operators
 

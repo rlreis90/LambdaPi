@@ -13,6 +13,7 @@ module Interpreter where
   import Parser
   import Printer
   
+  import Prelude hiding (putStr,putStrLn)
   import Operators
   
   type InterpreterState v inf = (Bool, String, NameEnv v, Ctx inf)
@@ -168,8 +169,8 @@ module Interpreter where
                --  usually, you'd want to have the bound identifier *and*
                --  the result of evaluation
                let outtext = (if i == it
-                              then icprint interpreter (iquote interpreter v) <> text " :: " <> itprint interpreter y
-                              else text i <> text " :: " <> itprint interpreter y)
+                              then icprint interpreter (iquote interpreter v) <> text " : " <> itprint interpreter y
+                              else text i <> text " : " <> itprint interpreter y)
                              |> render
                putStrLn outtext
                writeFile out (process outtext) |> unless (null out))
