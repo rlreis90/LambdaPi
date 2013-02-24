@@ -2,7 +2,6 @@ module REPL where
 
   import Control.Monad.Error
   import Ast
-  import LambdaPi_Core
   import Interpreter
   import Globals
   
@@ -11,6 +10,14 @@ module REPL where
   
   import Prelude hiding (putStr,putStrLn)
   import Operators
+  
+  import LambdaPi_UndersCore
+  
+  import System.Console.Haskeline hiding (catch)
+  import qualified System.Console.Haskeline.History as HlHist
+  
+  addHistory :: MonadException m => String -> m ()  
+  addHistory s = runInputT defaultSettings (putHistory (HlHist.addHistory s HlHist.emptyHistory))
   
   --  read-eval-print loop
   readevalprint :: Interpreter i c v t tinf inf -> InterpreterState v inf -> IO ()

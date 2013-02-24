@@ -8,6 +8,7 @@ module Ast where
                    | Out String             --  more lhs2TeX hacking, allow to print to files
                    deriving (Show)
     
+  type Result a = Either String a
   type NameEnv v = [(Name, v)]
   type Ctx inf = [(Name, inf)]
   

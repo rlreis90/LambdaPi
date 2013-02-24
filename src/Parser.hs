@@ -7,7 +7,7 @@ module Parser where
   import Text.ParserCombinators.Parsec.Language
   
   import Ast
-  
+
   lambdaPi = makeTokenParser (haskellStyle { identStart = letter <|> P.char '_',
                                              reservedNames = ["forall", "let", "assume", "putStrLn", "out"] })
                                              
@@ -18,8 +18,7 @@ module Parser where
                      (let rec :: [String] -> [Info] -> CharParser () ([String], [Info])
                           rec e ts =
                             do
-                             (x,t) <- parens lambdaPi
-                                        (do
+                             (x,t) <- parens lambdaPi (do
                                            x <- identifier simplyTyped 
                                            reserved simplyTyped ":"
                                            t <- pInfo

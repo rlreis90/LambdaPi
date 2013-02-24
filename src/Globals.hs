@@ -1,6 +1,6 @@
 module Globals where
   import Ast
-  import LambdaPi_Core
+  import LambdaPi_UndersCore
   
   lambdaPiTypeEnv :: Ctx Value_
   lambdaPiTypeEnv =
