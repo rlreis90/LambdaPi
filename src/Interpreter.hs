@@ -74,27 +74,26 @@ module Interpreter where
                    IO (Maybe (InterpreterState v inf))
   
   handleCommand interp state@(inter, _, valueEnv, typeEnv) cmd =
-    let done = return $ Just state
-    in
     case cmd of
-                          
-       Noop     ->  done
+       Noop     ->  return $ Just state
        
        Quit     ->  putStrLn "!@#$^&*" |> unless inter -- haha
                       >> return Nothing
        
-       Help     ->  putStr (helpTxt commands) >> done
+       Help     ->  do
+                      putStr (helpTxt commands)
+                      return $ Just state
                       
        TypeOf e ->  parseIO "<interactive>" (iiparse interp) e
                       >>= maybe (return Nothing) (iinfer interp valueEnv typeEnv)
                       >>= maybe (return ()) (putStrLn . render . itprint interp)
-                      >> done
+                      >> return (Just state)
                      
        Browse    -> putStr (unlines [ symbol | Global symbol <- nub (fmap fst typeEnv) |> reverse ])
-                      >> done
+                      >> return (Just state)
 
-       Compile from -> 
-                    case from of                     
+       Compile form -> 
+                    case form of
                         Interactive command -> 
                            parseIO "<interactive>" (isparse interp) command
                              >>= maybe (return state) (handleStmt interp state)
@@ -122,7 +121,7 @@ module Interpreter where
   st :: Interpreter ITerm CTerm Value Type Info Info
   st = I { iname = "the simply typed lambda calculus",
            iprompt = "ST> ",
-           iitype = \ _ c -> iType 0 c,
+           iitype = \ _ c -> inferType 0 c,
            iquote = quote0,
            ieval  = \ e x -> iEval x (e, []),
            ihastype = HasType,

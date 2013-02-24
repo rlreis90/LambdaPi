@@ -8,6 +8,12 @@ module Operators where
   (|>) :: a -> (a -> b) -> b
   x |> f = f x
   
+  putStr :: String -> IO ()
   putStr = Utf.putStr . fromString
   
+  putStrLn :: String -> IO ()
   putStrLn = Utf.putStrLn . fromString
+  
+  at :: Int -> [a] -> a
+  at = flip (!!)
+              

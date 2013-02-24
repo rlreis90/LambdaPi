@@ -27,8 +27,8 @@ module Printer where
   
   tPrint :: Int -> Type -> Doc
   tPrint _ (TFree (Global s))  =  text s
-  tPrint _ (TFree _)           =  undefined
   tPrint p (Fun ty ty')        =  parensIf (p > 0) (sep [tPrint 0 ty <> text " ->", nest 2 (tPrint 0 ty')])
+  tPrint _ (TFree _)           =  undefined
   
   iPrint :: Int -> Int -> ITerm -> Doc
   iPrint p i (Ann c ty)         =  parensIf (p > 1) (cPrint 2 i c <> text " : " <> tPrint 0 ty)

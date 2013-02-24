@@ -10,7 +10,8 @@ module Ast where
     
   type Result a = Either String a
   type NameEnv v = [(Name, v)]
-  type Ctx inf = [(Name, inf)]
+  type Ctx inf = [(Name, inf)] 
+  type Env = [Value]
   
   data ITerm
      =  Ann    CTerm Type
@@ -54,9 +55,6 @@ module Ast where
      |  HasType  Type 
     deriving (Show)
  
-  type Context = [(Name, Info)]
-  
-  type Env = [Value]
   
   data CTerm_
      =  Inf_  ITerm_
